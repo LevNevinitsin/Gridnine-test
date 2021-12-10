@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html class="page" lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <title></title>
+  <link rel="stylesheet" href="css/style.min.css">
+  <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgo=">
+</head>
+<body class="page__body">
+  <main class="page-main">
+    <section class="page-main__flights flights">
+      <h1 class="visually-hidden">Подходящие перелёты</h1>
+      <form class="flights__filter filter js-filter" method="GET">
+        <fieldset class="filter__fieldset js-filter-sort">
+          <legend class="filter__legend">Сортировать</legend>
+          <label class="filter__label">
+            <input class="filter__input-radio" type="radio" name="sort" value="price-asc" checked>
+            <span> - по возрастанию цены</span>
+          </label>
+          <label class="filter__label">
+            <input class="filter__input-radio" type="radio" name="sort" value="price-desc">
+            <span> - по убыванию цены</span>
+          </label>
+          <label class="filter__label">
+            <input class="filter__input-radio" type="radio" name="sort" value="duration-asc">
+            <span> - по времени в пути</span>
+          </label>
+        </fieldset>
+        <fieldset class="filter__fieldset js-filter-changes">
+          <legend class="filter__legend">Фильтровать</legend>
+        </fieldset>
+        <fieldset class="filter__fieldset">
+          <legend class="filter__legend">Цена</legend>
+          <label class="filter__label filter__label--text">
+            <span class="filter__field-caption">От </span>
+            <input class="js-min-price" type="number" name="price-gt">
+          </label>
+          <label class="filter__label filter__label--text">
+            <span class="filter__field-caption">До </span>
+            <input class="js-max-price" type="number" name="price-lt">
+          </label>
+        </fieldset>
+        <fieldset class="filter__fieldset js-filter-carrier">
+          <legend class="filter__legend">Авиакомпании</legend>
+        </fieldset>
+      </form>
+      <ul class="flights__list js-flights__list"></ul>
+    </section>
+  </main>
+  <script type="module" src="/js/main.js"></script>
+
+  <template id="filter-changes-count-option">
+    <label class="filter__label js-filter-changes-checkbox">
+      <input class="filter__input-checkbox js-filter-changes-checkbox-input" type="checkbox" name="changes-count" value="">
+      <span class="js-filter-changes-checkbox-text"></span>
+    </label>
+  </template>
+
+  <template id="filter-carriers-checkbox">
+    <div class="filter__carrier-option js-filter-carriers-checkbox">
+      <label class="filter__label">
+        <input class="filter__input-checkbox js-filter-carrier-checkbox-input" type="checkbox" name="airline-name" value="">
+        <span class="filter__field-caption js-filter-carrier-checkbox-name"></span>
+      </label>
+      <span class="js-filter-carrier-checkbox-price"></span>
+    </div>
+  </template>
+
+  <template id="leg">
+    <div class="flight__leg">
+      <p class="flight__path">
+        <span class="flight__airport js-leg-departure-point"></span>
+        <span class="flight__airport-code flight__airport-code--from js-leg-departure-point-code"></span>
+        <span class="flight__airport js-leg-arrival-point"></span>
+        <span class="flight__airport-code js-leg-arrival-point-code"></span>
+      </p>
+      <div class="flight__timing">
+        <p class="flight__datetime">
+          <span class="flight__time js-leg-departure-time"></span>
+          <span class="flight__date js-leg-departure-date"></span>
+        </p>
+        <p class="flight__duration js-leg-duration"></p>
+        <p class="flight__datetime">
+          <span class="flight__date js-leg-arrival-date"></span>
+          <span class="flight__time js-leg-arrival-time"></span>
+        </p>
+      </div>
+      <div class="flight__changes"><span class="flight__changes-text js-leg-changes-text"></span></div>
+      <p class="flight__carrier-name js-leg-carrier-name"></p>
+    </div>
+  </template>
+
+  <template id="flight">
+    <li class="flights-list__item flight">
+      <div class="flight__top-line">
+        <img class="flight__carrier-logo js-flight__carrier-logo" src="" alt="" width="106" height="31">
+        <p class="flight__cost js-flight__cost"></p>
+        <p class="flight__cost-caption">Стоимость для одного взрослого пассажира</p>
+      </div>
+      <div class="flight__legs js-flight__legs"></div>
+      <button class="flight__button-select button">Выбрать</button>
+    </li>
+  </template>
+</body>
+</html>

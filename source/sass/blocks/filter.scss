@@ -1,0 +1,77 @@
+.filter {
+  height: min-content;
+  padding: 34px 0 34px 20px;
+
+  font-family: $font-family-2;
+  font-size: 12px;
+
+  border-top: 36px solid $grey-2;
+  border-bottom: 144px solid $grey-2;
+}
+
+.filter__fieldset {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+
+  border: none;
+
+  &:not(:last-child) {
+    margin-bottom: 36px;
+  }
+}
+
+.filter__legend {
+  margin-bottom: 16px;
+
+  font-weight: 700;
+}
+
+.filter__label {
+  display: flex;
+  align-items: center;
+
+  &:not(:last-child) {
+    margin-bottom: 2px;
+  }
+
+  &--text {
+    &:not(:last-child) {
+      margin-bottom: 17px;
+    }
+
+    .filter__field-caption {
+      margin-right: 6px;
+    }
+  }
+}
+
+.filter__input-radio,
+.filter__input-checkbox {
+  margin: 0 5px 0 0;
+}
+
+.filter__input-checkbox {
+  position: relative;
+
+  &::before {
+    content: attr(data-instances-count);
+    position: absolute;
+    top: 0;
+    left: -30px;
+  }
+}
+
+.filter__field-caption {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.filter__carrier-option {
+  display: grid;
+  grid-template-columns: 142px auto;
+  column-gap: 5px;
+  align-items: center;
+}

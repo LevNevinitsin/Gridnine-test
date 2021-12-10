@@ -1,0 +1,21 @@
+// Global
+
+@import "variables.scss";
+@import "global.scss";
+@import "fonts.scss";
+@import "mixins.scss";
+
+// Blocks
+@import "blocks/flights.scss";
+@import "blocks/filter.scss";
+@import "blocks/flight.scss";
+
+// Common
+@import "blocks/button.scss";
+
+
+// Body, header, footer
+@import "blocks/page.scss";
+
+// Miscellaneous
+@import "blocks/visually-hidden.scss";
