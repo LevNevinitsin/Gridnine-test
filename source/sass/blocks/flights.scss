@@ -6,9 +6,13 @@
   margin: 0 auto;
 }
 
-.flights__list {
+.flights__container {
   padding: 20px 0;
-  margin: 0;
+}
+
+.flights__list {
+  padding: 0;
+  margin: 0 0 20px;
 
   list-style: none;
 }
@@ -16,5 +20,27 @@
 .flights-list__item {
   &:not(:last-child) {
     margin-bottom: 28px;
+  }
+}
+
+.flights__show-more {
+  display: block;
+  min-width: 255px;
+  margin: 0 auto;
+  padding: 5px 10px;
+
+  font-family: $font-family;
+  font-size: 18px;
+
+  background: $light-2;
+  border: 1px solid $dark-2;
+  box-shadow: 0 0 0 1px $grey-3 inset;
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  &:active {
+    padding: 6px 10px 4px;
   }
 }

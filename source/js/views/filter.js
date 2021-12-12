@@ -1,117 +1,134 @@
-import { getNounPluralForm } from '/js/util.js';
+import { getNounPluralForm, createNodeFromTemplate, getOptions, getPropertyValueInterval } from '/js/util.js';
+import { filterFlights } from '/js/filter-flights.js';
 
-const FILTER_CONFIG = [
-  {
-    title: 'Сортировать',
-    type: 'radio',
-    name: 'sort',
-    class: 'js-filter-sort',
-    optionTemplate: 'filter-sort',
-    options: [
-      {value: 'price-asc', caption: 'по возрастанию цены', 'cb': (a, b) => a.cost - b.cost},
-      {value: 'price-desc', caption: 'по убыванию цены', 'cb': (a, b) => b.cost - a.cost},
-      {value: 'duration-asc', caption: 'по времени в пути', 'cb': (a, b) => a.totalDuration - b.totalDuration},
-    ],
+const FILTER_CONFIG = {
+  filterLegendClass: '.js-filter-legend',
+  filterTemplate: '#filter',
+  filters: [
+    {
+      title: 'Сортировать',
+      type: 'radio',
+      name: 'sort',
+      optionTemplate: '#filter-sort-option',
+      class: 'js-filter-sort',
+      options: [
+        {value: 'price-asc', caption: 'по возрастанию цены', 'cb': (a, b) => a.cost - b.cost, isChecked: true},
+        {value: 'price-desc', caption: 'по убыванию цены', 'cb': (a, b) => b.cost - a.cost},
+        {value: 'duration-asc', caption: 'по времени в пути', 'cb': (a, b) => a.totalDuration - b.totalDuration},
+      ],
+    },
+    {
+      title: 'Фильтровать',
+      type: 'checkbox',
+      name: 'maxChangesCount',
+      optionTemplate: '#filter-changes-count-option',
+      optionProperties: 'caption:maxChangesCount->maxChangesCountCb',
+      class: 'js-filter-changes-count',
+    },
+    {
+      title: 'Цена',
+      type: 'interval',
+      name: 'cost',
+      filterTemplate: '#filter--interval',
+      class: 'js-filter-cost',
+    },
+    {
+      title: 'Авиакомпании',
+      type: 'checkbox',
+      name: 'carrierId',
+      optionTemplate: '#filter-carrier-option',
+      optionProperties: 'caption:carrierName, minCost:cost->min',
+      class: 'js-filter-carrier',
+    },
+  ],
+  propertiesCallbacksMap : {
+    'min': (value, minValue) => value < (minValue ?? value + 1) ? value : minValue,
+    'max': (value, maxValue) => value > (maxValue ?? 0) ? value : maxValue,
+    'maxChangesCountCb': (value) => parseInt(value) === 0
+      ? 'без пересадок'
+      : `${value} ${getNounPluralForm(value, 'пересадка', 'пересадки', 'пересадок')}`,
   },
-  {
-    title: 'Фильтровать',
-    type: 'checkbox',
-    name: 'changes-count',
-    class: 'js-filter-changes',
-    optionTemplate: 'filter-changes-count-option',
-  }
-]
-
-function renderChangesFilter(filterChangesData, filterChangesCheckboxTemplate, filterChangesNode) {
-  if (filterChangesData.length > 1) {
-    filterChangesData.forEach((filterChangesOption) => {
-      const checkboxNode = filterChangesCheckboxTemplate.cloneNode(true);
-      const inputNode = checkboxNode.querySelector('.js-filter-changes-checkbox-input');
-      const textNode = checkboxNode.querySelector('.js-filter-changes-checkbox-text');
-
-      const value = filterChangesOption.value
-      inputNode.value = value;
-      const text = value === 0
-        ? 'без пересадок'
-        : `${value} ${getNounPluralForm(value, 'пересадка', 'пересадки', 'пересадок')}`;
-      textNode.textContent = ` - ${text}`;
-      inputNode.dataset.instancesCount = filterChangesOption.instancesCount;
-
-      filterChangesNode.appendChild(checkboxNode);
-    })
-  } else {
-    filterChangesNode.remove();
-  }
 }
 
-function setPricePlaceholders(filterMinPriceNode, filterMaxPriceNode, minPriceValue, maxPriceValue) {
-  filterMinPriceNode.placeholder = minPriceValue;
-  filterMaxPriceNode.placeholder = maxPriceValue;
-};
+function fillFormWithFilters(filterFormNode, config, flights) {
+  filterFormNode.innerHTML = '';
 
-function renderCarrierFilter(filterCarriersData, filterCarrierCheckboxTemplate, filterCarrierNode) {
-  if (filterCarriersData.length > 1) {
-    filterCarriersData.forEach((filterCarriersOption) => {
-      const checkboxNode = filterCarrierCheckboxTemplate.cloneNode(true);
-      const inputNode = checkboxNode.querySelector('.js-filter-carrier-checkbox-input');
-      const nameNode = checkboxNode.querySelector('.js-filter-carrier-checkbox-name');
-      const priceNode = checkboxNode.querySelector('.js-filter-carrier-checkbox-price');
+  config.filters.forEach((filterConfig) => {
+    const filterNode = createNodeFromTemplate(filterConfig?.filterTemplate ?? config.filterTemplate);
+    filterNode.classList.add(filterConfig.class);
+    const legendNode = filterNode.querySelector(config.filterLegendClass);
+    legendNode.textContent = filterConfig.title;
 
-      inputNode.value = filterCarriersOption.uid;
-      nameNode.textContent = ` - ${filterCarriersOption.name}`;
-      priceNode.textContent = `от ${filterCarriersOption.minCost} р.`;
-      inputNode.dataset.instancesCount = filterCarriersOption.instancesCount;
+    const filterName = filterConfig.name;
 
-      filterCarrierNode.appendChild(checkboxNode);
-    })
-  } else {
-    filterCarrierNode.remove();
-  }
-};
+    if (filterConfig.type !== 'interval') {
+      const options = filterConfig.options ?? getOptions(flights, filterConfig, config.propertiesCallbacksMap);
 
-function filterFlights(flights, filterNode, filterToExclude = '') {
-  const SORTING_MAP = {
-    'price-asc': (a, b) => a.cost - b.cost,
-    'price-desc': (a, b) => b.cost - a.cost,
-    'duration-asc': (a, b) => a.totalDuration - b.totalDuration,
-  };
+      options.forEach((option) => {
+        const optionNode = createNodeFromTemplate(filterConfig.optionTemplate);
+        const optionInputNode = optionNode.querySelector('input');
+        const optionCaptionNode = optionNode.querySelector('.js-option-caption');
 
-  const filterSortingNode = filterNode.querySelector('.js-filter-sort');
-  const chosenSorting = filterSortingNode.querySelector('input:checked').value;
+        optionInputNode.name = filterName;
+        optionInputNode.value = option.value;
+        optionCaptionNode.textContent = ` - ${option.caption}`;
+        if (option?.isChecked) { optionInputNode.checked = true }
+        if (option?.instancesCount) {optionInputNode.dataset.instancesCount = option.instancesCount}
 
-  const allowedChangesCounts = filterToExclude !== 'changes-count'
-    ? Array.from(filterNode.querySelectorAll('.js-filter-changes-checkbox-input:checked'))
-      .map((node) => parseInt(node.value))
-    : [];
+        if (filterName === 'carrierId') {
+          const optionPriceNode = optionNode.querySelector('.js-filter-carrier-price');
+          optionPriceNode.textContent = `от ${option.minCost} р.`
+        }
 
-  const minPrice = parseInt(filterNode.querySelector('.js-min-price').value || 0);
-  const maxPrice = parseInt(filterNode.querySelector('.js-max-price').value);
-
-  const allowedCarriers = filterToExclude !== 'carrier'
-    ? Array.from(filterNode.querySelectorAll('.js-filter-carrier-checkbox-input:checked'))
-      .map((node) => node.value)
-    : [];
-
-  return flights
-    .sort(SORTING_MAP[chosenSorting])
-    .filter((flight) => allowedChangesCounts.length ? allowedChangesCounts.includes(flight.maxChangesCount) : true)
-    .filter((flight) => minPrice <= flight.cost)
-    .filter((flight) => maxPrice ? flight.cost <= maxPrice : true)
-    .filter((flight) => allowedCarriers.length ? allowedCarriers.includes(flight.carrierId) : true);
-}
-
-function excludeFilterOptions(filterNode, filteredOptions, propertyName = 'value') {
-  filterNode.querySelectorAll('input').forEach((input) => {
-    input.dataset.instancesCount = filteredOptions.filter((option) => {
-      return option[propertyName].toString() === input.value
-    })[0]?.instancesCount ?? 0;
-
-    if (parseInt(input.dataset.instancesCount) === 0) {
-      if (input.disabled === false) { input.disabled = true }
+        filterNode.appendChild(optionNode);
+      });
     } else {
-      if (input.disabled === true) { input.disabled = false }
+      const inputsNodes = filterNode.querySelectorAll('input');
+      const inputMinNode = inputsNodes[0];
+      const inputMaxNode = inputsNodes[1];
+
+      inputMinNode.name = `${filterName}-gt`;
+      inputMaxNode.name = `${filterName}-lt`;
+    }
+
+    filterFormNode.appendChild(filterNode);
+  })
+}
+
+function updateFilterCondition(filterFormNode, config, flights) {
+  const parentNode = filterFormNode.parentNode;
+  filterFormNode.remove();
+
+  config.filters.forEach((filterConfig) => {
+    const exclusivelyFilteredFlights = filterFlights(flights, filterFormNode, config, filterConfig.name);
+
+    if (filterConfig.type === 'checkbox') {
+      const options = filterConfig.options ?? getOptions(exclusivelyFilteredFlights, filterConfig, config.propertiesCallbacksMap);
+
+      const optionsInputsNodes = filterFormNode.querySelectorAll(`.${filterConfig.class} input`);
+
+      optionsInputsNodes.forEach((optionInputNode) => {
+        const option = options.filter((option) => option.value.toString() === optionInputNode.value)[0];
+        const optionInstancesCount = option?.instancesCount ?? 0;
+        optionInputNode.dataset.instancesCount = optionInstancesCount;
+        if (optionInstancesCount === 0) {
+          if (!optionInputNode.disabled) { optionInputNode.disabled = true }
+        } else {
+          if (optionInputNode.disabled) { optionInputNode.disabled = false }
+        }
+      });
+    } else if (filterConfig.type === 'interval') {
+      const inputsNodes = filterFormNode.querySelectorAll(`.${filterConfig.class} input`);
+      const inputMinNode = inputsNodes[0];
+      const inputMaxNode = inputsNodes[1];
+
+      const filterInterval = getPropertyValueInterval(exclusivelyFilteredFlights, filterConfig.name);
+      inputMinNode.placeholder = filterInterval.min;
+      inputMaxNode.placeholder = filterInterval.max;
     }
   });
+
+  parentNode.appendChild(filterFormNode);
 }
 
-export { renderChangesFilter, setPricePlaceholders, renderCarrierFilter, filterFlights, excludeFilterOptions };
+export { FILTER_CONFIG, fillFormWithFilters, updateFilterCondition };

@@ -1,165 +1,78 @@
 import { DATA } from '/data/data.js';
-import { getFlights } from '/js/models/flights.js';
-import { renderFlights } from '/js/views/flights.js';
-import {
-  debounce,
-  setFilterState,
-  generateQs
-} from '/js/util.js';
-import {
-  renderChangesFilter,
-  setPricePlaceholders,
-  renderCarrierFilter,
-  filterFlights,
-  excludeFilterOptions
-} from '/js/views/filter.js';
+import { getFlights, prepareFlights } from '/js/models/flights.js';
+import { filterFlights } from '/js/filter-flights.js';
+import { fillListWithFlights } from '/js/views/flights.js';
+import { debounce, setFilterState, generateQs } from '/js/util.js';
+import { FILTER_CONFIG, fillFormWithFilters, updateFilterCondition } from '/js/views/filter.js';
 
-const DEBOUNCE_INTERVAL = 300;
+const DEBOUNCE_INTERVAL = 100;
+const FLIGHTS_TO_RENDER_LIMIT = 2;
 
-const CARRIERS_LOGOS_MAP = {
-  'SU1': '/img/aeroflot.png',
-  'LO': '/img/lot-polish-airlines.png',
-};
+const flightsSectionNode   = document.querySelector('.js-flights');
+const filterFormNode       = document.querySelector('.js-filter-form');
+const flightsContainerNode = document.querySelector('.js-flights-container');
+const flightsListNode      = document.querySelector('.js-flights-list');
+const flightsShowMoreNode  = document.querySelector('.js-flights-show-more');
 
-const CURRENCIES_SYMBOLS_MAP = {
-  'RUB': '₽',
-  'USD': '$',
-  'EUR': '€',
-};
+const flightTemplate = document.querySelector('#flight').content.querySelector('.flight');
+const legTemplate    = document.querySelector('#leg').content.querySelector('.flight__leg');
 
-const filterNode           = document.querySelector('.js-filter');
-const filterChangesNode    = filterNode.querySelector('.js-filter-changes');
-const filterMinPriceNode   = filterNode.querySelector('.js-min-price');
-const filterMaxPriceNode   = filterNode.querySelector('.js-max-price');
-const filterCarrierNode    = filterNode.querySelector('.js-filter-carrier');
-const flightsContainerNode = document.querySelector('.js-flights__list');
+const flights = prepareFlights(getFlights(DATA));
 
-const flightTemplate       = document.querySelector('#flight').content.querySelector('.flight');
-const filterChangesCheckboxTemplate = document.querySelector('#filter-changes-checkbox')
-  .content
-  .querySelector('.js-filter-changes-checkbox');
-const filterCarrierCheckboxTemplate = document.querySelector('#filter-carriers-checkbox')
-  .content
-  .querySelector('.js-filter-carriers-checkbox');
-const legTemplate = document.querySelector('#leg').content.querySelector('.flight__leg');
+let filteredFlights;
+let flightsOffset = 0;
 
-const flightsData = getFlights(DATA);
-const flights = flightsData
-  .map((flight) => {
-    const flightInfo = flight.flight;
-    const flightPrepared = {};
+filterFormNode.remove();
+fillFormWithFilters(filterFormNode, FILTER_CONFIG, flights);
+flightsSectionNode.appendChild(filterFormNode);
 
-    const carrierInfo = flightInfo.carrier;
-    flightPrepared.carrierId = carrierInfo.uid;
-    flightPrepared.carrierLogoSrc = CARRIERS_LOGOS_MAP[flightPrepared.carrierId] ?? null;
-    flightPrepared.carrierName = carrierInfo.caption;
+setFilterState(window.location.href, filterFormNode);
+updatePage();
 
-    const priceInfo = flightInfo.price.total;
-    flightPrepared.cost = parseInt(priceInfo.amount);
-    flightPrepared.costString = `${priceInfo.amount} ${CURRENCIES_SYMBOLS_MAP[priceInfo.currencyCode]}`;
+const debouncedProcessState = debounce(() => processState(), DEBOUNCE_INTERVAL);
+filterFormNode.addEventListener('change', onFilterFormNodeChange);
+flightsShowMoreNode.addEventListener('click', onFlightsShowMoreNodeClick);
 
-    const legs = flightInfo.legs;
-    flightPrepared.totalDuration = legs.reduce((total, leg) => { return total + leg.duration }, 0);
+function onFilterFormNodeChange() { debouncedProcessState() };
+function onFlightsShowMoreNodeClick() { updateFlightsContainer() };
 
-    flightPrepared.legs = legs.map((leg) => {
-      const legPrepared = {};
-
-      const legSegments      = leg.segments;
-      const legFirstSegment  = legSegments[0];
-      const legSegmentsCount = legSegments.length;
-      const legLastSegment   = legSegments[legSegmentsCount - 1];
-
-      legPrepared.departureCity     = legFirstSegment?.departureCity;
-      legPrepared.departureAirport  = legFirstSegment.departureAirport;
-      legPrepared.departureDatetime = legFirstSegment.departureDate;
-      legPrepared.arrivalCity       = legLastSegment?.arrivalCity;
-      legPrepared.arrivalAirport    = legLastSegment.arrivalAirport;
-      legPrepared.arrivalDatetime   = legLastSegment.arrivalDate;
-      legPrepared.duration          = leg.duration;
-      legPrepared.changesCount      = legSegmentsCount - 1;
-      legPrepared.carrier           = legFirstSegment.airline.caption;
-
-      return legPrepared;
-    });
-
-    flightPrepared.maxChangesCount = Math.max(...flightPrepared.legs.map((leg) => leg.changesCount));
-
-    return flightPrepared;
-  })
-  .sort((a, b) => a.cost - b.cost);
-
-renderChangesFilter(getChangesCountsOptions(flights), filterChangesCheckboxTemplate, filterChangesNode);
-renderCarrierFilter(getCarriersOptions(flights), filterCarrierCheckboxTemplate, filterCarrierNode);
-
-setFilterState(window.location.search, filterNode);
-processState(flights, filterNode);
-
-filterNode.addEventListener('change', onFilterNodeChange(flights, filterNode));
-
-function onFilterNodeChange(flights, filterNode) {
-  return debounce(() => processState(flights, filterNode), DEBOUNCE_INTERVAL)
-};
-
-function processState(flights, filterNode) {
-  const url = `${window.location.href.split('?')[0]}?${generateQs(filterNode)}`;
+function processState() {
+  const url = `${window.location.href.split('?')[0]}?${generateQs(filterFormNode)}`;
   window.history.pushState('', '', url);
-
-  const changesCountsOptionsFiltered = getChangesCountsOptions(filterFlights(flights, filterNode, 'changes-count'));
-  const carriersOptionsFiltered = getCarriersOptions(filterFlights(flights, filterNode, 'carrier'));
-  excludeFilterOptions(filterChangesNode, changesCountsOptionsFiltered);
-  excludeFilterOptions(filterCarrierNode, carriersOptionsFiltered, 'uid');
-
-  const filteredFlights = filterFlights(flights, filterNode);
-  const filteredPriceInterval = getPriceInterval(filteredFlights);
-  setPricePlaceholders(filterMinPriceNode, filterMaxPriceNode, filteredPriceInterval.min, filteredPriceInterval.max);
-
-  flightsContainerNode.innerHTML = '';
-  renderFlights(filteredFlights, flightTemplate, legTemplate, flightsContainerNode);
+  flightsOffset = 0;
+  updatePage();
 }
 
-function getChangesCountsOptions(flights) {
-  const changesOptionsMap = flights.reduce((resultObject, flight) => {
-    resultObject[flight.maxChangesCount] = (resultObject[flight.maxChangesCount] || 0) + 1;
-    return resultObject;
-  }, {});
+function updatePage() {
+  updateFilterCondition(filterFormNode, FILTER_CONFIG, flights);
 
-  const changesOptionsArray = Object.keys(changesOptionsMap).map((key) => {
-    return {
-      value: parseInt(key),
-      instancesCount: changesOptionsMap[key],
-    };
-  });
-
-  return changesOptionsArray.sort((a, b) => b.value - a.value);
+  filteredFlights = filterFlights(flights, filterFormNode, FILTER_CONFIG);
+  updateFlightsContainer();
 }
 
-function getCarriersOptions(flights) {
-  const carriersOptionsMap = flights.reduce((resultObject, flight) => {
-    if (!resultObject[flight.carrierId]) {
-      resultObject[flight.carrierId] = { name: flight.carrierName, minCost: flight.cost, instancesCount: 1 }
-    } else {
-      resultObject[flight.carrierId].instancesCount = resultObject[flight.carrierId].instancesCount + 1;
+function updateFlightsContainer() {
+  flightsContainerNode.remove();
 
-      if (flight.cost < resultObject[flight.carrierId].minCost) {
-        resultObject[flight.carrierId].minCost = flight.cost;
-      }
+  const remainingFilteredFlightsCount = filteredFlights.length - flightsOffset;
+  const areFlightsDepleted = remainingFilteredFlightsCount <= FLIGHTS_TO_RENDER_LIMIT;
+  const flightsCountToRender = areFlightsDepleted ? remainingFilteredFlightsCount : FLIGHTS_TO_RENDER_LIMIT;
+
+  fillListWithFlights(flightsListNode, filteredFlights, flightTemplate, legTemplate, flightsCountToRender, flightsOffset);
+
+  flightsOffset += flightsCountToRender;
+  //flightsShowMoreNode.textContent = `Показать ещё. Показано: ${flightsOffset}. Ещё осталось: ${filteredFlights.length - flightsOffset}`;
+
+  if (areFlightsDepleted) {
+    if (flightsShowMoreNode.parentNode) {
+      flightsShowMoreNode.removeEventListener('click', onFlightsShowMoreNodeClick);
+      flightsShowMoreNode.remove();
     }
-    return resultObject;
-  }, {});
-
-  return Object.keys(carriersOptionsMap).map((key) => {
-    return {
-      uid: key,
-      name: carriersOptionsMap[key].name,
-      minCost: carriersOptionsMap[key].minCost,
-      instancesCount: carriersOptionsMap[key].instancesCount
+  } else {
+    if (!flightsShowMoreNode.parentNode) {
+      flightsContainerNode.appendChild(flightsShowMoreNode);
+      flightsShowMoreNode.addEventListener('click', onFlightsShowMoreNodeClick);
     }
-  });
-}
+  }
 
-function getPriceInterval (flights) {
-  const costValues = flights.map((flight) => flight.cost);
-  const minPriceValue = Math.min(...costValues);
-  const maxPriceValue = Math.max(...costValues);
-  return { min: minPriceValue, max: maxPriceValue };
+  flightsSectionNode.appendChild(flightsContainerNode);
 }

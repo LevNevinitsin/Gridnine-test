@@ -1,13 +1,29 @@
 import { getNounPluralForm, getTimeString, getDateString, convertMinutes } from '/js/util.js';
 
-function renderFlights (flights, flightTemplate, legTemplate, containerNode) {
-  flights.forEach((flight) => {
+const CARRIERS_LOGOS_MAP = {
+  'SU1': '/img/aeroflot.png',
+  'LO': '/img/lot-polish-airlines.png',
+};
+
+const CURRENCIES_SYMBOLS_MAP = {
+  'RUB': '₽',
+  'USD': '$',
+  'EUR': '€',
+};
+
+function fillListWithFlights(flightsListNode, flights, flightTemplate, legTemplate, flightsToRenderCount, flightsOffset) {
+  if (flightsOffset === 0) {
+    flightsListNode.innerHTML = '';
+  }
+
+  for (let i = flightsOffset; i < flightsOffset + flightsToRenderCount; i++) {
     const flightNode = flightTemplate.cloneNode(true);
     const costNode = flightNode.querySelector('.js-flight__cost');
     const legsNode = flightNode.querySelector('.js-flight__legs');
     const logoNode = flightNode.querySelector('.js-flight__carrier-logo');
 
-    const logoSrc = flight.carrierLogoSrc;
+    const flight = flights[i];
+    const logoSrc = CARRIERS_LOGOS_MAP[flight.carrierId];
 
     if (logoSrc) {
       logoNode.setAttribute('src', logoSrc);
@@ -16,7 +32,7 @@ function renderFlights (flights, flightTemplate, legTemplate, containerNode) {
       logoNode.remove();
     }
 
-    costNode.textContent = flight.costString;
+    costNode.textContent = `${flight.cost} ${CURRENCIES_SYMBOLS_MAP[flight.currencyCode]}`;
 
     flight.legs.forEach((leg) => {
       const legNode = legTemplate.cloneNode(true);
@@ -59,9 +75,8 @@ function renderFlights (flights, flightTemplate, legTemplate, containerNode) {
       legsNode.appendChild(legNode);
     });
 
-    containerNode.appendChild(flightNode);
-  });
+    flightsListNode.appendChild(flightNode);
+  }
 }
 
-export { renderFlights };
-
+export { fillListWithFlights };

@@ -10,62 +10,71 @@
 </head>
 <body class="page__body">
   <main class="page-main">
-    <section class="page-main__flights flights">
+    <section class="page-main__flights flights js-flights">
       <h1 class="visually-hidden">Подходящие перелёты</h1>
-      <form class="flights__filter filter js-filter" method="GET">
-        <fieldset class="filter__fieldset js-filter-sort">
-          <legend class="filter__legend">Сортировать</legend>
-          <label class="filter__label">
-            <input class="filter__input-radio" type="radio" name="sort" value="price-asc" checked>
-            <span> - по возрастанию цены</span>
-          </label>
-          <label class="filter__label">
-            <input class="filter__input-radio" type="radio" name="sort" value="price-desc">
-            <span> - по убыванию цены</span>
-          </label>
-          <label class="filter__label">
-            <input class="filter__input-radio" type="radio" name="sort" value="duration-asc">
-            <span> - по времени в пути</span>
-          </label>
-        </fieldset>
-        <fieldset class="filter__fieldset js-filter-changes">
-          <legend class="filter__legend">Фильтровать</legend>
-        </fieldset>
-        <fieldset class="filter__fieldset">
-          <legend class="filter__legend">Цена</legend>
-          <label class="filter__label filter__label--text">
-            <span class="filter__field-caption">От </span>
-            <input class="js-min-price" type="number" name="price-gt">
-          </label>
-          <label class="filter__label filter__label--text">
-            <span class="filter__field-caption">До </span>
-            <input class="js-max-price" type="number" name="price-lt">
-          </label>
-        </fieldset>
-        <fieldset class="filter__fieldset js-filter-carrier">
-          <legend class="filter__legend">Авиакомпании</legend>
-        </fieldset>
-      </form>
-      <ul class="flights__list js-flights__list"></ul>
+      <form class="flights__filter filter js-filter-form" method="GET"></form>
+      <div class="flights__container js-flights-container">
+        <ul class="flights__list js-flights-list"></ul>
+        <button class="flights__show-more js-flights-show-more">Показать ещё</button>
+      </div>
     </section>
   </main>
   <script type="module" src="/js/main.js"></script>
 
-  <template id="filter-changes-count-option">
-    <label class="filter__label js-filter-changes-checkbox">
-      <input class="filter__input-checkbox js-filter-changes-checkbox-input" type="checkbox" name="changes-count" value="">
-      <span class="js-filter-changes-checkbox-text"></span>
+  <template id="filter">
+    <fieldset class="filter__fieldset">
+      <legend class="filter__legend js-filter-legend"></legend>
+    </fieldset>
+  </template>
+
+  <template id="filter--interval">
+    <fieldset class="filter__fieldset">
+      <legend class="filter__legend js-filter-legend"></legend>
+      <label class="filter__label filter__label--text">
+        <span class="filter__field-caption">От </span>
+        <input class="js-min-price" type="number">
+      </label>
+      <label class="filter__label filter__label--text">
+        <span class="filter__field-caption">До </span>
+        <input class="js-max-price" type="number">
+      </label>
+    </fieldset>
+  </template>
+
+  <template id="filter-sort-option">
+    <label class="filter__label js-filter-sort-option">
+      <input class="filter__input-radio" type="radio">
+      <span class="js-option-caption"></span>
     </label>
   </template>
 
-  <template id="filter-carriers-checkbox">
-    <div class="filter__carrier-option js-filter-carriers-checkbox">
+  <template id="filter-changes-count-option">
+    <label class="filter__label js-filter-changes-count-option">
+      <input class="filter__input-checkbox js-filter-changes-count-input" type="checkbox">
+      <span class="js-option-caption"></span>
+    </label>
+  </template>
+
+  <template id="filter-carrier-option">
+    <div class="filter__carrier-option js-filter-carrier-option">
       <label class="filter__label">
-        <input class="filter__input-checkbox js-filter-carrier-checkbox-input" type="checkbox" name="airline-name" value="">
-        <span class="filter__field-caption js-filter-carrier-checkbox-name"></span>
+        <input class="filter__input-checkbox js-filter-carrier-input" type="checkbox" name="airline-name" value="">
+        <span class="filter__field-caption js-option-caption"></span>
       </label>
-      <span class="js-filter-carrier-checkbox-price"></span>
+      <span class="js-filter-carrier-price"></span>
     </div>
+  </template>
+
+  <template id="flight">
+    <li class="flights-list__item flight">
+      <div class="flight__top-line">
+        <img class="flight__carrier-logo js-flight__carrier-logo" src="" alt="" width="106" height="31">
+        <p class="flight__cost js-flight__cost"></p>
+        <p class="flight__cost-caption">Стоимость для одного взрослого пассажира</p>
+      </div>
+      <div class="flight__legs js-flight__legs"></div>
+      <button class="flight__button-select button">Выбрать</button>
+    </li>
   </template>
 
   <template id="leg">
@@ -90,18 +99,6 @@
       <div class="flight__changes"><span class="flight__changes-text js-leg-changes-text"></span></div>
       <p class="flight__carrier-name js-leg-carrier-name"></p>
     </div>
-  </template>
-
-  <template id="flight">
-    <li class="flights-list__item flight">
-      <div class="flight__top-line">
-        <img class="flight__carrier-logo js-flight__carrier-logo" src="" alt="" width="106" height="31">
-        <p class="flight__cost js-flight__cost"></p>
-        <p class="flight__cost-caption">Стоимость для одного взрослого пассажира</p>
-      </div>
-      <div class="flight__legs js-flight__legs"></div>
-      <button class="flight__button-select button">Выбрать</button>
-    </li>
   </template>
 </body>
 </html>

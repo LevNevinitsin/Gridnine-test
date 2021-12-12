@@ -57,7 +57,7 @@
 
   &--from {
     &::after {
-      content: ' \27F6';
+      content: " \27F6";
 
       font-weight: 400;
     }
@@ -91,7 +91,7 @@
   font-size: 18px;
 
   &::before {
-    content: url('/img/clock.png');
+    content: url("/img/clock.png");
     margin-right: 4px;
   }
 }
@@ -107,7 +107,7 @@
   color: $secondary;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 50%;
     left: 0;
