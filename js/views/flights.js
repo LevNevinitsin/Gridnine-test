@@ -1,4 +1,4 @@
-import { getNounPluralForm, getTimeString, getDateString, convertMinutes } from '/js/util.js';
+import { getNounPluralForm, getTimeString, getDateString, convertMinutes } from '../util.js';
 
 const CARRIERS_LOGOS_MAP = {
   'SU1': '/img/aeroflot.png',

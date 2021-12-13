@@ -1,5 +1,5 @@
-import { getNounPluralForm, createNodeFromTemplate, getOptions, getPropertyValueInterval } from '/js/util.js';
-import { filterFlights } from '/js/filter-flights.js';
+import { getNounPluralForm, createNodeFromTemplate, getOptions, getPropertyValueInterval } from '../util.js';
+import { filterFlights } from '../filter-flights.js';
 
 const FILTER_CONFIG = {
   filterLegendClass: '.js-filter-legend',

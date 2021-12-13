@@ -1,9 +1,9 @@
-import { DATA } from '/data/data.js';
-import { getFlights, prepareFlights } from '/js/models/flights.js';
-import { filterFlights } from '/js/filter-flights.js';
-import { fillListWithFlights } from '/js/views/flights.js';
-import { debounce, setFilterState, generateQs } from '/js/util.js';
-import { FILTER_CONFIG, fillFormWithFilters, updateFilterCondition } from '/js/views/filter.js';
+import { DATA } from '../data/data.js';
+import { getFlights, prepareFlights } from './models/flights.js';
+import { filterFlights } from './filter-flights.js';
+import { fillListWithFlights } from './views/flights.js';
+import { debounce, setFilterState, generateQs } from './util.js';
+import { FILTER_CONFIG, fillFormWithFilters, updateFilterCondition } from './views/filter.js';
 
 const DEBOUNCE_INTERVAL = 300;
 const FLIGHTS_TO_RENDER_LIMIT = 2;
