@@ -115,7 +115,7 @@ function getOptions(flights, filterConfig, propertiesCallbacksMap) {
   });
 }
 
-function getPropertyValueInterval (flights, propertyName) {
+function getPropertyValueInterval(flights, propertyName) {
   const propertyValues = flights.map((flight) => flight[propertyName]);
   const propertyMinValue = Math.min(...propertyValues);
   const propertyMaxValue = Math.max(...propertyValues);

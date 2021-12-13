@@ -54,7 +54,7 @@ function fillFormWithFilters(filterFormNode, config, flights) {
   filterFormNode.innerHTML = '';
 
   config.filters.forEach((filterConfig) => {
-    const filterNode = createNodeFromTemplate(filterConfig?.filterTemplate ?? config.filterTemplate);
+    const filterNode = createNodeFromTemplate(filterConfig.filterTemplate ?? config.filterTemplate);
     filterNode.classList.add(filterConfig.class);
     const legendNode = filterNode.querySelector(config.filterLegendClass);
     legendNode.textContent = filterConfig.title;
@@ -104,13 +104,13 @@ function updateFilterCondition(filterFormNode, config, flights) {
 
     if (filterConfig.type === 'checkbox') {
       const options = filterConfig.options ?? getOptions(exclusivelyFilteredFlights, filterConfig, config.propertiesCallbacksMap);
-
       const optionsInputsNodes = filterFormNode.querySelectorAll(`.${filterConfig.class} input`);
 
       optionsInputsNodes.forEach((optionInputNode) => {
         const option = options.filter((option) => option.value.toString() === optionInputNode.value)[0];
         const optionInstancesCount = option?.instancesCount ?? 0;
         optionInputNode.dataset.instancesCount = optionInstancesCount;
+
         if (optionInstancesCount === 0) {
           if (!optionInputNode.disabled) { optionInputNode.disabled = true }
         } else {

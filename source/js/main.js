@@ -5,7 +5,7 @@ import { fillListWithFlights } from '/js/views/flights.js';
 import { debounce, setFilterState, generateQs } from '/js/util.js';
 import { FILTER_CONFIG, fillFormWithFilters, updateFilterCondition } from '/js/views/filter.js';
 
-const DEBOUNCE_INTERVAL = 100;
+const DEBOUNCE_INTERVAL = 300;
 const FLIGHTS_TO_RENDER_LIMIT = 2;
 
 const flightsSectionNode   = document.querySelector('.js-flights');
