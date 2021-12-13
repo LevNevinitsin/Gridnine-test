@@ -60,7 +60,6 @@ function updateFlightsContainer() {
   fillListWithFlights(flightsListNode, filteredFlights, flightTemplate, legTemplate, flightsCountToRender, flightsOffset);
 
   flightsOffset += flightsCountToRender;
-  //flightsShowMoreNode.textContent = `Показать ещё. Показано: ${flightsOffset}. Ещё осталось: ${filteredFlights.length - flightsOffset}`;
 
   if (areFlightsDepleted) {
     if (flightsShowMoreNode.parentNode) {
